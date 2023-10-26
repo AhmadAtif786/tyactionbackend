@@ -4,6 +4,7 @@ const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 // Set up Multer for file uploads (video thumbnails and resumes)
 const storage = multer.diskStorage({
   destination: "uploads/",
