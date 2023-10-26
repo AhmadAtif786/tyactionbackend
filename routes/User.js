@@ -36,9 +36,9 @@ router.post("/users", async (req, res) => {
 
     const existingUser = await User.findOne({ email });
 
-    if (existingUser) {
-      return res.status(400).json({ error: "Email already exists" });
-    }
+    // if (existingUser) {
+    //   return res.status(400).json({ error: "Email already exists" });
+    // }
 
     const user = new User({
       name,
