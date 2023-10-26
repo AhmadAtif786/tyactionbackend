@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const userRoutes = require("./routes/User");
-const videoRoutes = require("./routes/video");
+const videoRoutes = require("./routes/Video");
 
 const app = express();
 const port = 3001;
