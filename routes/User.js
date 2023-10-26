@@ -4,7 +4,10 @@ const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const AWS = require("aws-sdk");
+const s3 = new AWS.S3()
+
+
 // Set up Multer for file uploads (video thumbnails and resumes)
 const storage = multer.diskStorage({
   destination: "uploads/",
@@ -17,10 +20,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Create a new user
-router.post("/users", upload.single('image'), async (req, res) => {
+router.post("/users", async (req, res) => {
   try {
     const { name, Lname, bio, description, pinnedSocialLinks, resumeLink, email } = req.body;
-    
+    await s3.putObject({
+      Body: JSON.stringify({key:"value"}),
+      Bucket: "cyclic-shy-blue-mussel-robe-ap-northeast-2",
+      Key: "uploads/"+req.file,
+    }).promise()
     let image=null;
 
     if (req.file) {
