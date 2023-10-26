@@ -5,7 +5,7 @@ const userRoutes = require("/routes/user");
 const videoRoutes = require("./routes/video");
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = 3001;
 
 // Connect to MongoDB - Replace with your actual MongoDB connection string
 mongoose.connect("mongodb+srv://ahmad:212Mtpochna@cluster0.45t8rnb.mongodb.net/", {
@@ -13,7 +13,7 @@ mongoose.connect("mongodb+srv://ahmad:212Mtpochna@cluster0.45t8rnb.mongodb.net/"
   useUnifiedTopology: true,
 });
 
-const allowedOrigins = ["http://localhost:3000"]; // Replace with your React app's URL or add more origins if needed
+// const allowedOrigins = ["http://localhost:3000"]; // Replace with your React app's URL or add more origins if needed
 
 app.use(
   cors({
