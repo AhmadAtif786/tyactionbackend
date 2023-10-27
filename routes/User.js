@@ -22,7 +22,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       // Upload the file to AWS S3
       const fileData = req.file;
       const params = {
-        Bucket: 'cyclic-shy-blue-mussel-robe-ap-northeast-2',
+        Bucket: 'your-s3-bucket-name',
         Key: fileData.originalname,
         Body: fileData.buffer,
       };
@@ -47,14 +47,14 @@ router.post("/users", upload.single('image'), async (req, res) => {
           email,
         });
 
-        user.save((err) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).json({ error: "Error saving the user to the database" });
-          }
-
-          res.status(201).json(user);
-        });
+        user.save() // Mongoose save() doesn't accept a callback in newer versions
+          .then((savedUser) => {
+            res.status(201).json(savedUser);
+          })
+          .catch((saveError) => {
+            console.error(saveError);
+            res.status(500).json({ error: "Error saving the user to the database" });
+          });
       });
     } else {
       // If no file was uploaded, create the user without an image
@@ -68,14 +68,14 @@ router.post("/users", upload.single('image'), async (req, res) => {
         email,
       });
 
-      user.save((err) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ error: "Error saving the user to the database" });
-        }
-
-        res.status(201).json(user);
-      });
+      user.save()
+        .then((savedUser) => {
+          res.status(201).json(savedUser);
+        })
+        .catch((saveError) => {
+          console.error(saveError);
+          res.status(500).json({ error: "Error saving the user to the database" });
+        });
     }
   } catch (error) {
     console.error(error);
