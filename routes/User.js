@@ -1,9 +1,10 @@
-// routes/user.js
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
 const path = require('path');
+const AWS = require('aws-sdk');
+
 // Set up Multer for file uploads (video thumbnails and resumes)
 const storage = multer.diskStorage({
   destination: "uploads/",
@@ -13,6 +14,11 @@ const storage = multer.diskStorage({
   },
 });
 
+const s3 = new AWS.S3();
+
+// Configure AWS S3 parameters
+const s3BucketName = 'cyclic-shy-blue-mussel-robe-ap-northeast-2';
+
 const upload = multer({ storage });
 
 // Create a new user
@@ -20,10 +26,20 @@ router.post("/users", upload.single('image'), async (req, res) => {
   try {
     const { name, Lname, bio, description, pinnedSocialLinks, resumeLink, email } = req.body;
     
-    let image=null;
+    let image = null;
 
     if (req.file) {
-      image = req.file.filename; // Store the filename in the User model
+      // Upload the file to AWS S3
+      const fileData = req.file;
+      const params = {
+        Bucket: s3BucketName,
+        Key: fileData.filename, // Set the key to the filename
+        Body: fileData.buffer, // Use the file buffer
+      };
+
+      await s3.upload(params).promise(); // Upload the file to S3
+
+      image = params.Key; // Store the image filename in the User model
     }
 
     const existingUser = await User.findOne({ email });
@@ -49,7 +65,6 @@ router.post("/users", upload.single('image'), async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
 
 router.get("/users", async (req, res) => {
   const email = req.query.email;
