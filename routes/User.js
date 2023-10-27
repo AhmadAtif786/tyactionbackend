@@ -22,7 +22,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       // Upload the file to AWS S3
       const fileData = req.file;
       const params = {
-        Bucket: 'your-s3-bucket-name',
+        Bucket: 'cyclic-shy-blue-mussel-robe-ap-northeast-2',
         Key: fileData.originalname,
         Body: fileData.buffer,
       };
