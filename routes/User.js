@@ -10,8 +10,8 @@ const upload = multer({ storage });
 
 // Configure AWS SDK
 const s3 = new AWS.S3({
-  accessKeyId: 'ASIAYC2RJDOW6G26F3VW',
-  secretAccessKey: 'owJFL1g9w9yXTqAdlkdYTit3l4JpeMDdrxlWkKbF',
+  accessKeyId: 'ASIAYC2RJDOW4U2XT6IW',
+  secretAccessKey: 'tMJBRnaO88+TzeDsK+Uvf8Ij7tikgIhxbyH61eH0',
   region: 'ap-northeast-2' // Set your preferred AWS region
 });
 
