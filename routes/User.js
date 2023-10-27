@@ -25,7 +25,7 @@ const upload = multer({ storage });
 router.post("/users", upload.single('image'), async (req, res) => {
   try {
     const { name, Lname, bio, description, pinnedSocialLinks, resumeLink, email } = req.body;
-    
+
     let image = null;
 
     if (req.file) {
@@ -33,13 +33,13 @@ router.post("/users", upload.single('image'), async (req, res) => {
       const fileData = req.file;
       const params = {
         Bucket: s3BucketName,
-        Key: fileData.filename, // Set the key to the filename
-        Body: fileData.buffer, // Use the file buffer
+        Key: fileData.filename,
+        Body: fileData.buffer,
       };
 
-      await s3.upload(params).promise(); // Upload the file to S3
+      const s3UploadResponse = await s3.upload(params).promise();
 
-      image = params.Key; // Store the image filename in the User model
+      image = s3UploadResponse.Key; // Store the S3 key (filename) in the User model
     }
 
     const existingUser = await User.findOne({ email });
@@ -55,7 +55,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       description,
       pinnedSocialLinks,
       resumeLink,
-      image, // Store the image filename or path in the User model
+      image,
       email,
     });
 
