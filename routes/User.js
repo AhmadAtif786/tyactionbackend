@@ -5,7 +5,6 @@ const multer = require('multer');
 const path = require('path');
 const AWS = require('aws-sdk');
 
-// Set up Multer for file uploads (video thumbnails and resumes)
 const storage = multer.diskStorage({
   destination: "uploads/",
   filename: function (req, file, cb) {
@@ -15,8 +14,6 @@ const storage = multer.diskStorage({
 });
 
 const s3 = new AWS.S3();
-
-// Configure AWS S3 parameters
 const s3BucketName = 'cyclic-shy-blue-mussel-robe-ap-northeast-2';
 
 const upload = multer({ storage });
@@ -26,10 +23,14 @@ router.post("/users", upload.single('image'), async (req, res) => {
   try {
     const { name, Lname, bio, description, pinnedSocialLinks, resumeLink, email } = req.body;
 
+    // Validate email format
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
     let image = null;
 
     if (req.file) {
-      // Upload the file to AWS S3
       const fileData = req.file;
       const params = {
         Bucket: s3BucketName,
@@ -38,8 +39,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       };
 
       const s3UploadResponse = await s3.upload(params).promise();
-
-      image = s3UploadResponse.Key; // Store the S3 key (filename) in the User model
+      image = s3UploadResponse.Key;
     }
 
     const existingUser = await User.findOne({ email });
@@ -62,7 +62,8 @@ router.post("/users", upload.single('image'), async (req, res) => {
     await user.save();
     res.status(201).json(user);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error(error); // Log the error for debugging
+    res.status(400).json({ error: "An error occurred while processing your request" });
   }
 });
 
@@ -70,6 +71,10 @@ router.get("/users", async (req, res) => {
   const email = req.query.email;
 
   try {
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -77,8 +82,15 @@ router.get("/users", async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); // Log the error for debugging
+    res.status(500).json({ error: "An error occurred while processing your request" });
   }
 });
+
+// Simple email format validation
+function isValidEmail(email) {
+  const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+  return emailRegex.test(email);
+}
 
 module.exports = router;
