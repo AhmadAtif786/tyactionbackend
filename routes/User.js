@@ -4,16 +4,12 @@ const User = require("../models/User");
 const multer = require('multer');
 const AWS = require('aws-sdk');
 
-// Set up Multer for file uploads (video thumbnails and resumes)
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Configure AWS SDK
-const s3 = new AWS.S3({
-  accessKeyId: 'ASIAYC2RJDOW4U2XT6IW',
-  secretAccessKey: 'tMJBRnaO88+TzeDsK+Uvf8Ij7tikgIhxbyH61eH0',
-  region: 'ap-northeast-2' // Set your preferred AWS region
-});
+// Use IAM role for AWS S3 access
+AWS.config.update({ region: 'us-east-1' }); // Set your preferred AWS region
+const s3 = new AWS.S3();
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
@@ -27,52 +23,66 @@ router.post("/users", upload.single('image'), async (req, res) => {
       const fileData = req.file;
       const params = {
         Bucket: 'cyclic-shy-blue-mussel-robe-ap-northeast-2',
-        Key: fileData.originalname, // Set the S3 key (filename)
+        Key: fileData.originalname,
         Body: fileData.buffer,
       };
 
-      const s3UploadResponse = await s3.upload(params).promise();
+      s3.upload(params, (err, data) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Error uploading the file to S3" });
+        }
 
-      image = s3UploadResponse.Location; // Store the S3 file URL in the User model
+        image = data.Location; // Store the S3 file URL in the User model
+
+        // Create a new user and save it to your database
+        const user = new User({
+          name,
+          Lname,
+          bio,
+          description,
+          pinnedSocialLinks,
+          resumeLink,
+          image,
+          email,
+        });
+
+        user.save((err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Error saving the user to the database" });
+          }
+
+          res.status(201).json(user);
+        });
+      });
+    } else {
+      // If no file was uploaded, create the user without an image
+      const user = new User({
+        name,
+        Lname,
+        bio,
+        description,
+        pinnedSocialLinks,
+        resumeLink,
+        email,
+      });
+
+      user.save((err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Error saving the user to the database" });
+        }
+
+        res.status(201).json(user);
+      });
     }
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      return res.status(400).json({ error: "Email already exists" });
-    }
-
-    const user = new User({
-      name,
-      Lname,
-      bio,
-      description,
-      pinnedSocialLinks,
-      resumeLink,
-      image,
-      email,
-    });
-
-    await user.save();
-    res.status(201).json(user);
   } catch (error) {
+    console.error(error);
     res.status(400).json({ error: error.message });
   }
 });
 
-router.get("/users", async (req, res) => {
-  const email = req.query.email;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Define other routes and configurations as needed
 
 module.exports = router;
