@@ -83,6 +83,19 @@ router.post("/users", upload.single('image'), async (req, res) => {
   }
 });
 
-// Define other routes and configurations as needed
+router.get("/users", async (req, res) => {
+  const email = req.query.email;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
