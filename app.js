@@ -13,7 +13,7 @@ mongoose.connect("mongodb+srv://ahmad:212Mtpochna@cluster0.45t8rnb.mongodb.net/"
   useUnifiedTopology: true,
 });
 
-const allowedOrigins = ["http://localhost:3000","https://cheerful-malasada-d30854.netlify.app/"]; // Replace with your React app's URL or add more origins if needed
+const allowedOrigins = ["http://localhost:3000","https://cheerful-malasada-d30854.netlify.app"]; // Replace with your React app's URL or add more origins if needed
 
 app.use(
   cors({
