@@ -22,7 +22,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       // Upload the file to AWS S3
       const fileData = req.file;
       const params = {
-        Bucket: 'cyclic-shy-blue-mussel-robe-ap-northeast-2',
+        Bucket: '8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
         Key: fileData.originalname,
         Body: fileData.buffer,
       };
@@ -38,7 +38,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
         // Retrieve data from S3
         try {
           const myFile = await s3.getObject({
-            Bucket: "cyclic-shy-blue-mussel-robe-ap-northeast-2",
+            Bucket: "8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias",
             Key: "some_files/my_file.json",
           }).promise();
 
@@ -110,7 +110,7 @@ router.get("/users", async (req, res) => {
     // Retrieve data from S3
     try {
       const myFile = await s3.getObject({
-        Bucket: "cyclic-shy-blue-mussel-robe-ap-northeast-2",
+        Bucket: "8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias",
         Key: "some_files/my_file.json",
       }).promise();
 
