@@ -17,7 +17,8 @@ router.post("/videos", async (req, res) => {
 // Get all videos
 router.get("/videos", async (req, res) => {
   try {
-    const videos = await Video.find();
+    const userEmail = req.query.email; // Assuming email is passed as a query parameter
+    const videos = await Video.find({ userEmail });
     res.json(videos);
   } catch (error) {
     res.status(500).json({ error: error.message });
