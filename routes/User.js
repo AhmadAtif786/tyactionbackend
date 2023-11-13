@@ -32,7 +32,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       // Upload the file to AWS S3
       const fileData = req.file;
       const params = {
-        Bucket: '8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
+        Bucket: 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
         Key: fileData.originalname,
         Body: fileData.buffer,
       };
@@ -46,7 +46,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
         image = data.Location; // Store the S3 file URL in the User model
 
         // Fetch the file content from S3
-        const fileContent = await getFileFromS3('cyclic-shy-blue-mussel-robe-ap-northeast-2', 'some_files/my_file.json');
+        const fileContent = await getFileFromS3('accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias', 'uploads/'.fileData.originalname);
 
         // Use fileContent as needed in your logic
 
