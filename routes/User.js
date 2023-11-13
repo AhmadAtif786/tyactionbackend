@@ -39,37 +39,44 @@ router.post("/users", upload.single('image'), async (req, res) => {
 
       s3.upload(params, async (err, data) => {
         if (err) {
-          console.error(err);
+          console.error("S3 Upload Error:", err);
           return res.status(500).json({ error: "Error uploading the file to S3" });
         }
+
+        console.log("S3 Upload Success:", data);
 
         image = data.Location; // Store the S3 file URL in the User model
 
         // Fetch the file content from S3
-        const fileContent = await getFileFromS3('accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias', 'uploads/'.fileData.originalname);
+        try {
+          const fileContent = await getFileFromS3('accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias', 'uploads/' + fileData.originalname);
+          console.log("File Content from S3:", fileContent);
+          // Use fileContent as needed in your logic
 
-        // Use fileContent as needed in your logic
-
-        // Create a new user and save it to your database
-        const user = new User({
-          name,
-          Lname,
-          bio,
-          description,
-          pinnedSocialLinks,
-          resumeLink,
-          image,
-          email,
-        });
-
-        user.save()
-          .then((savedUser) => {
-            res.status(201).json(savedUser);
-          })
-          .catch((saveError) => {
-            console.error(saveError);
-            res.status(500).json({ error: "Error saving the user to the database" });
+          // Create a new user and save it to your database
+          const user = new User({
+            name,
+            Lname,
+            bio,
+            description,
+            pinnedSocialLinks,
+            resumeLink,
+            image,
+            email,
           });
+
+          user.save()
+            .then((savedUser) => {
+              res.status(201).json(savedUser);
+            })
+            .catch((saveError) => {
+              console.error(saveError);
+              res.status(500).json({ error: "Error saving the user to the database" });
+            });
+        } catch (fetchError) {
+          console.error("Error fetching file content from S3:", fetchError);
+          res.status(500).json({ error: "Error fetching file content from S3" });
+        }
       });
     } else {
       // If no file was uploaded, create the user without an image
