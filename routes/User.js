@@ -11,6 +11,16 @@ const upload = multer({ storage });
 AWS.config.update({ region: 'us-east-1' }); // Set your preferred AWS region
 const s3 = new AWS.S3();
 
+// Fetch file from AWS S3
+const getFileFromS3 = async (bucket, key) => {
+  try {
+    const file = await s3.getObject({ Bucket: bucket, Key: key }).promise();
+    return file.Body.toString('utf-8'); // Adjust based on the file content type
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
   try {
@@ -22,18 +32,23 @@ router.post("/users", upload.single('image'), async (req, res) => {
       // Upload the file to AWS S3
       const fileData = req.file;
       const params = {
-        Bucket: 'cyclic-shy-blue-mussel-robe-ap-northeast-2',
+        Bucket: '8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
         Key: fileData.originalname,
         Body: fileData.buffer,
       };
 
-      s3.upload(params, (err, data) => {
+      s3.upload(params, async (err, data) => {
         if (err) {
           console.error(err);
           return res.status(500).json({ error: "Error uploading the file to S3" });
         }
 
         image = data.Location; // Store the S3 file URL in the User model
+
+        // Fetch the file content from S3
+        const fileContent = await getFileFromS3('cyclic-shy-blue-mussel-robe-ap-northeast-2', 'some_files/my_file.json');
+
+        // Use fileContent as needed in your logic
 
         // Create a new user and save it to your database
         const user = new User({
@@ -47,7 +62,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
           email,
         });
 
-        user.save() // Mongoose save() doesn't accept a callback in newer versions
+        user.save()
           .then((savedUser) => {
             res.status(201).json(savedUser);
           })
