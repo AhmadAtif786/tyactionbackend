@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
 const { S3 } = require('@aws-sdk/client-s3');
+const AWS = require('aws-sdk');
 
 
 const storage = multer.memoryStorage();
@@ -31,7 +32,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       s3.upload(params, (err, data) => {
         if (err) {
           console.error(err);
-          return res.status(500).json({ error: "Error uploading the file to S3" });
+          return res.status(500).json({ error: err });
         }
 
         image = data.Location; // Store the S3 file URL in the User model
