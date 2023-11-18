@@ -8,7 +8,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Use IAM role for AWS S3 access
-const s3 = new S3({ region: 'us-east-1' }); // Set your preferred AWS region
+const s3 = new S3({ region: 'eu-north-1' }); // Set your preferred AWS region
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
