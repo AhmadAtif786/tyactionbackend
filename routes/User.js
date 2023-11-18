@@ -2,16 +2,13 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
-const { S3 } = require('@aws-sdk/client-s3');
-const AWS = require('aws-sdk');
-
+const { S3, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Use IAM role for AWS S3 access
-AWS.config.update({ region: 'us-east-1' }); // Set your preferred AWS region
-const s3 = new S3();
+const s3 = new S3({ region: 'us-east-1' }); // Set your preferred AWS region
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
@@ -29,12 +26,8 @@ router.post("/users", upload.single('image'), async (req, res) => {
         Body: fileData.buffer,
       };
 
-      s3.upload(params, (err, data) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ error: err });
-        }
-
+      try {
+        const data = await s3.send(new PutObjectCommand(params));
         image = data.Location; // Store the S3 file URL in the User model
 
         // Create a new user and save it to your database
@@ -49,15 +42,12 @@ router.post("/users", upload.single('image'), async (req, res) => {
           email,
         });
 
-        user.save() // Mongoose save() doesn't accept a callback in newer versions
-          .then((savedUser) => {
-            res.status(201).json(savedUser);
-          })
-          .catch((saveError) => {
-            console.error(saveError);
-            res.status(500).json({ error: "Error saving the user to the database" });
-          });
-      });
+        const savedUser = await user.save(); // Mongoose save() doesn't accept a callback in newer versions
+        res.status(201).json(savedUser);
+      } catch (uploadError) {
+        console.error(uploadError);
+        res.status(500).json({ error: "Error uploading the file to S3" });
+      }
     } else {
       // If no file was uploaded, create the user without an image
       const user = new User({
@@ -70,14 +60,8 @@ router.post("/users", upload.single('image'), async (req, res) => {
         email,
       });
 
-      user.save()
-        .then((savedUser) => {
-          res.status(201).json(savedUser);
-        })
-        .catch((saveError) => {
-          console.error(saveError);
-          res.status(500).json({ error: "Error saving the user to the database" });
-        });
+      const savedUser = await user.save();
+      res.status(201).json(savedUser);
     }
   } catch (error) {
     console.error(error);
