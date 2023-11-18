@@ -2,14 +2,15 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
-const AWS = require('aws-sdk');
+const { S3 } = require('@aws-sdk/client-s3');
+
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Use IAM role for AWS S3 access
 AWS.config.update({ region: 'us-east-1' }); // Set your preferred AWS region
-const s3 = new AWS.S3();
+const s3 = new S3();
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
