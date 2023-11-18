@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   description: String,
   pinnedSocialLinks: [String],
   resumeLink: String,
-  // image: String,
+  image: String,
   email: String,
 });
 
