@@ -2,21 +2,18 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
-const { S3, PutObjectCommand } = require('@aws-sdk/client-s3');
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { fromIni } = require('@aws-sdk/credential-provider-ini');
+const { region } = require('@aws-sdk/config');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Update AWS SDK configuration
-AWS.config.update({
-  accessKeyId: 'AKIASQDYEAPSEPLFPWJ5',
-  secretAccessKey: '5dhT5CmqW88hmpWfNDX/KlV8YljJCwDW/KGw/UQm',
-  region: 'us-east-1' // e.g., 'us-east-1'
+// Create an S3 client with the correct endpoint
+const s3 = new S3Client({
+  region: 'us-east-1', // Replace with your actual AWS region
+  credentials: fromIni(),
 });
-
-// Create an S3 client
-const s3 = new S3({endpoint: 's3.amazonaws.com',});
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
