@@ -3,12 +3,20 @@ const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
 const { S3, PutObjectCommand } = require('@aws-sdk/client-s3');
+const AWS = require('aws-sdk');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Use IAM role for AWS S3 access
-const s3 = new S3({ region: 'us-east-1' }); // Set your preferred AWS region
+// Update AWS SDK configuration
+AWS.config.update({
+  accessKeyId: 'AKIASQDYEAPSEPLFPWJ5',
+  secretAccessKey: '5dhT5CmqW88hmpWfNDX/KlV8YljJCwDW/KGw/UQm',
+  region: 'us-east-1' // e.g., 'us-east-1'
+});
+
+// Create an S3 client
+const s3 = new S3();
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
@@ -20,6 +28,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
     if (req.file) {
       // Upload the file to AWS S3
       const fileData = req.file;
+
       const params = {
         Bucket: 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
         Key: fileData.originalname,
