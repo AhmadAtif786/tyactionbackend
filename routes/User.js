@@ -16,7 +16,7 @@ AWS.config.update({
 });
 
 // Create an S3 client
-const s3 = new S3();
+const s3 = new S3({endpoint: 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias.s3.amazonaws.com',});
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
