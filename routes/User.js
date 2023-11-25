@@ -42,7 +42,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
           email,
         });
 
-        const savedUser = await user.save(); // Mongoose save() doesn't accept a callback in newer versions
+        const savedUser = await user.save();
         res.status(201).json(savedUser);
       } catch (uploadError) {
         console.error(uploadError);
@@ -69,6 +69,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
   }
 });
 
+// Retrieve a user by email
 router.get("/users", async (req, res) => {
   const email = req.query.email;
 
