@@ -2,21 +2,25 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
-const { S3, PutObjectCommand } = require('@aws-sdk/client-s3');
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { fromIni } = require('@aws-sdk/credential-provider-ini');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Update AWS SDK configuration
-AWS.config.update({
-  accessKeyId: 'AKIASQDYEAPSEPLFPWJ5',
-  secretAccessKey: '5dhT5CmqW88hmpWfNDX/KlV8YljJCwDW/KGw/UQm',
-  region: 'us-east-1' // e.g., 'us-east-1'
-});
+// Replace 'us-east-1' and 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias' with your actual AWS region and S3 access point name
+const region = 'us-east-1';
+const accessPointName = 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias';
 
-// Create an S3 client
-const s3 = new S3({endpoint: 's3.amazonaws.com',});
+// Construct the S3 service endpoint URL
+const s3Endpoint = `https://${accessPointName}-s3alias.s3.${region}.amazonaws.com`;
+
+// Create an S3 client with the correct endpoint
+const s3 = new S3Client({
+  region: region,
+  endpoint: s3Endpoint, // Use the constructed endpoint URL
+  credentials: fromIni(),
+});
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
@@ -30,7 +34,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
       const fileData = req.file;
 
       const params = {
-        Bucket: 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
+        Bucket: accessPointName,
         Key: fileData.originalname,
         Body: fileData.buffer,
       };
