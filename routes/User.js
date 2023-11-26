@@ -1,28 +1,77 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
-const upload = require("../utils/multer-config");
-const s3Controller = require("../controllers/s3Controller");
+const multer = require('multer');
+const { S3, PutObjectCommand } = require('@aws-sdk/client-s3');
+const AWS = require('aws-sdk');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Update AWS SDK configuration
+AWS.config.update({
+  accessKeyId: 'AKIASQDYEAPSEPLFPWJ5',
+  secretAccessKey: '5dhT5CmqW88hmpWfNDX/KlV8YljJCwDW/KGw/UQm',
+  region: 'us-east-1' // e.g., 'us-east-1'
+});
+
+// Create an S3 client
+const s3 = new S3({endpoint: 's3.amazonaws.com',});
 
 // Create a new user
-router.post("/users", upload.single('image'), s3Controller.uploadToS3, async (req, res) => {
+router.post("/users", upload.single('image'), async (req, res) => {
   try {
-    const { name, Lname, bio, description, pinnedSocialLinks, resumeLink, email, image } = req.body;
+    const { name, Lname, bio, description, pinnedSocialLinks, resumeLink, email } = req.body;
 
-    // Create a new user and save it to your database
-    const user = new User({
-      name,
-      Lname,
-      bio,
-      description,
-      pinnedSocialLinks,
-      resumeLink,
-      image,
-      email,
-    });
+    let image = null;
 
-    const savedUser = await user.save();
-    res.status(201).json(savedUser);
+    if (req.file) {
+      // Upload the file to AWS S3
+      const fileData = req.file;
+
+      const params = {
+        Bucket: 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
+        Key: fileData.originalname,
+        Body: fileData.buffer,
+      };
+
+      try {
+        const data = await s3.send(new PutObjectCommand(params));
+        image = data.Location; // Store the S3 file URL in the User model
+
+        // Create a new user and save it to your database
+        const user = new User({
+          name,
+          Lname,
+          bio,
+          description,
+          pinnedSocialLinks,
+          resumeLink,
+          image,
+          email,
+        });
+
+        const savedUser = await user.save();
+        res.status(201).json(savedUser);
+      } catch (uploadError) {
+        console.error(uploadError);
+        res.status(500).json({ error: "Error uploading the file to S3" });
+      }
+    } else {
+      // If no file was uploaded, create the user without an image
+      const user = new User({
+        name,
+        Lname,
+        bio,
+        description,
+        pinnedSocialLinks,
+        resumeLink,
+        email,
+      });
+
+      const savedUser = await user.save();
+      res.status(201).json(savedUser);
+    }
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: error.message });
