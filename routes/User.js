@@ -2,25 +2,13 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require('multer');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { fromIni } = require('@aws-sdk/credential-provider-ini');
+const { S3, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Replace 'us-east-1' and 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias' with your actual AWS region and S3 access point name
-const region = 'us-east-1';
-const accessPointName = 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias';
-
-// Construct the S3 service endpoint URL
-const s3Endpoint = `https://${accessPointName}-s3alias.s3.${region}.amazonaws.com`;
-
-// Create an S3 client with the correct endpoint
-const s3 = new S3Client({
-  region: region,
-  endpoint: s3Endpoint, // Use the constructed endpoint URL
-  credentials: fromIni(),
-});
+// Use IAM role for AWS S3 access
+const s3 = new S3({ region: 'us-east-1' }); // Set your preferred AWS region
 
 // Create a new user
 router.post("/users", upload.single('image'), async (req, res) => {
@@ -32,9 +20,8 @@ router.post("/users", upload.single('image'), async (req, res) => {
     if (req.file) {
       // Upload the file to AWS S3
       const fileData = req.file;
-
       const params = {
-        Bucket: accessPointName,
+        Bucket: 'accesspoint-8yjwix8e8phe6pu1iu793a5y4gfzsuse1a-s3alias',
         Key: fileData.originalname,
         Body: fileData.buffer,
       };
@@ -55,7 +42,7 @@ router.post("/users", upload.single('image'), async (req, res) => {
           email,
         });
 
-        const savedUser = await user.save();
+        const savedUser = await user.save(); // Mongoose save() doesn't accept a callback in newer versions
         res.status(201).json(savedUser);
       } catch (uploadError) {
         console.error(uploadError);
@@ -82,7 +69,6 @@ router.post("/users", upload.single('image'), async (req, res) => {
   }
 });
 
-// Retrieve a user by email
 router.get("/users", async (req, res) => {
   const email = req.query.email;
 
